@@ -1,0 +1,54 @@
+{
+    "name": "YOLOv8",
+    "image": "ultralytics/ultralytics:latest",
+    "runArgs": [
+        "--name","iot",
+        "--gpus","all",
+        "--ipc=host"
+    ],
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "terminal.integrated.shell.linux": "/bin/bash",
+                "python.pythonPath": "/opt/conda/lib/python3.10",
+                "python.defaultInterpreterPath": "/opt/conda/bin/python",
+                "python.analysis.extraPaths": [
+                    // https://stackoverflow.com/questions/122327/how-do-i-find-the-location-of-my-python-site-packages-directory
+                    "/opt/conda/lib/python3.10/dist-packages",
+                    "/opt/conda/lib/python3.10/site-packages"
+                ],
+                "python.autoComplete.extraPaths": [
+                    "/opt/conda/lib/python3.10/dist-packages",
+                    "/opt/conda/lib/python3.10/site-packages"
+                ],
+                
+                "python.analysis.addImport.heuristics": true,
+                "[python]": {
+                    "diffEditor.ignoreTrimWhitespace": false,
+                    "editor.defaultFormatter": "charliermarsh.ruff",
+                    "editor.codeActionsOnSave": {
+                        "source.organizeImports": "always",
+                        "source.fixAll": "always"
+                    }
+                }
+            },
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-toolsai.jupyter",
+                "ms-toolsai.vscode-jupyter-cell-tags",
+                "ms-toolsai.jupyter-renderers",
+                "ms-toolsai.vscode-jupyter-slideshow",
+                "charliermarsh.ruff",
+                "christian-kohler.path-intellisense",
+                "alexkainzinger.resource-watchdog"
+            ]
+        }
+    },
+    "containerEnv": {
+        "PYTHONPATH": "/opt/conda/lib/python3.10/site-packages"
+    },
+    "postCreateCommand": "conda install ipykernel -y",
+    "forwardPorts": []
+    // "remoteUser": "dimas"
+}
