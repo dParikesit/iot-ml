@@ -4,8 +4,10 @@ import tempfile
 from google.cloud import storage
 
 import full as full_process
+import requests
 
 storage_client = storage.Client()
+BACKEND_URL = os.getenv("BACKEND_URL")
 
 
 def process_image(data):
@@ -34,5 +36,14 @@ def process_image(data):
         print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
 
     vehicle_type, plate_number = full_process.full_pipeline(temp_local_filename)[0]
+
+    # Send the image to the backend.
+    requests.post(
+        BACKEND_URL,
+        json={
+            "plate_number": plate_number,
+            "image_url": f"https://storage.googleapis.com/{bucket_name}/{file_name}",
+        },
+    )
 
     print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
