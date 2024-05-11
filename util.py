@@ -1,8 +1,16 @@
 import string
-import easyocr
 
-# Initialize the OCR reader
-reader = easyocr.Reader(["en"], gpu=True)
+from paddleocr import PaddleOCR
+ocr = PaddleOCR(
+    lang="en",
+    det_model_dir="model/PaddleOCR/en_PP-OCRv3_det_infer",
+    rec_model_dir="model/PaddleOCR/en_PP-OCRv4_rec_infer",
+    cls_model_dir="model/PaddleOCR/ch_ppocr_mobile_v2.0_cls_infer",
+    use_angle_cls=True,
+    det=True,
+    rec=True,
+    cls=True,
+)
 
 # Mapping dictionaries for character conversion
 dict_char_to_int = {"O": "0", "I": "1", "J": "3", "A": "4", "G": "6", "S": "5"}
@@ -96,59 +104,44 @@ def license_complies_format(text):
         return False
 
 
-def format_license(text):
-    """
-    Format the license plate text by converting characters using the mapping dictionaries.
+def format_license(text: str):
+    state = 0 # 0 is initial alphabet, 1 is numeric, 2 is final alphabet
+    idx_1 = 0
+    idx_2 = 0
+    letters = [x for x in text.upper()]
 
-    Args:
-        text (str): License plate text.
+    # print(letters)
 
-    Returns:
-        str: Formatted license plate text.
-    """
-    license_plate_ = ""
-    mapping = {
-        0: dict_int_to_char,
-        1: dict_int_to_char,
-        4: dict_int_to_char,
-        5: dict_int_to_char,
-        6: dict_int_to_char,
-        2: dict_char_to_int,
-        3: dict_char_to_int,
-    }
-    for j in [0, 1, 2, 3, 4, 5, 6]:
-        if text[j] in mapping[j].keys():
-            license_plate_ += mapping[j][text[j]]
-        else:
-            license_plate_ += text[j]
+    for idx in range(len(letters)):
+        if state==0:
+            if letters[idx].isnumeric() and letters[idx]=='0':
+                letters[idx] = 'O'
+            elif letters[idx].isnumeric() and letters[idx]!='0':
+                state=1
+                idx_1 = idx
+        elif state==1:
+            if letters[idx].isalpha():
+                state=2
+                idx_2 = idx
+        elif state==2:
+            if letters[idx].isnumeric() and letters[idx]=='0':
+                letters[idx] = 'O'
+    
+    letters.insert(idx_2, " ")
+    letters.insert(idx_1, " ")
+    # print(letters)
+
+    license_plate_ = "".join(letters)
 
     return license_plate_
 
-
-def read_license_plate(license_plate_crop):
-    """
-    Read the license plate text from the given cropped image.
-
-    Args:
-        license_plate_crop (PIL.Image.Image): Cropped image containing the license plate.
-
-    Returns:
-        tuple: Tuple containing the formatted license plate text and its confidence score.
-    """
-
-    detections = reader.readtext(license_plate_crop)
-
-    for detection in detections:
-        bbox, text, score = detection
-
-        text = text.upper().replace(" ", "")
-
-        return text, score
-
-        # if license_complies_format(text):
-        #     return format_license(text), score
-
-    return None, None
+def read_paddlepaddle(image_path):    
+    result = ocr.ocr(image_path)
+    for idx in range(len(result)):
+        res = result[idx]
+        for line in res:
+            return line[-1]
+    return (None, None)
 
 
 def get_car(license_plate, vehicle_track_ids):
