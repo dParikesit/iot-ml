@@ -1,23 +1,40 @@
-# Copyright 2019 Google, LLC.
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+# Version: 2.0.0
+FROM paddlecloud/paddleocr:2.6-cpu-latest
 
-# [START cloudrun_pubsub_dockerfile]
-# [START run_pubsub_dockerfile]
+# YOLOv8
 
-# Use the official Python image.
-# https://hub.docker.com/_/python
-FROM python:3.11
+ARG YOLO_MAJOR_VERSION=8
+ARG YOLO_VERSION=8.2.0
+ARG YOLO_SIZE=l
+
+ADD https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.ttf \
+    https://github.com/ultralytics/assets/releases/download/v0.0.0/Arial.Unicode.ttf \
+    /root/.config/Ultralytics/
+
+# Install linux packages
+# g++ required to build 'tflite_support' and 'lap' packages, libusb-1.0-0 required for 'tflite_support' package
+RUN apt update \
+    && apt install --no-install-recommends -y gcc git zip curl htop libgl1 libglib2.0-0 libpython3-dev gnupg g++ libusb-1.0-0
+
+# Security updates
+# https://security.snyk.io/vuln/SNYK-UBUNTU1804-OPENSSL-3314796
+RUN apt upgrade --no-install-recommends -y openssl tar
+
+WORKDIR /workspace/docker/yolo
+RUN pip install ultralytics --ignore-installed 
+ADD https://github.com/ultralytics/assets/releases/download/v${YOLO_VERSION}/yolov${YOLO_MAJOR_VERSION}${YOLO_SIZE}.pt .
+ADD https://github.com/Muhammad-Zeerak-Khan/Automatic-License-Plate-Recognition-using-YOLOv8/raw/main/license_plate_detector.pt .
+
+# export tensorrt format. yolov8l.engine
+# RUN yolo export model=yolov${YOLO_MAJOR_VERSION}${YOLO_SIZE}.pt format=engine
+# RUN yolo export model=license_plate_detector.pt format=engine
+
+RUN pip install paddleocr
+
+# Set environment variables
+ENV OMP_NUM_THREADS=1
+# Avoid DDP error "MKL_THREADING_LAYER=INTEL is incompatible with libgomp.so.1 library" https://github.com/pytorch/pytorch/issues/37377
+ENV MKL_THREADING_LAYER=GNU
 
 
 # Allow statements and log messages to immediately appear in the Cloud Run logs
@@ -41,6 +58,3 @@ COPY . ./
 # to be equal to the cores available.
 # Timeout is set to 0 to disable the timeouts of the workers to allow Cloud Run to handle instance scaling.
 CMD exec gunicorn --bind :$PORT --workers 1 --threads 8 --timeout 0 main:app
-
-# [END run_pubsub_dockerfile]
-# [END cloudrun_pubsub_dockerfile]

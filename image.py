@@ -3,6 +3,8 @@ import tempfile
 
 from google.cloud import storage
 
+import full as full_process
+
 storage_client = storage.Client()
 
 
@@ -25,36 +27,12 @@ def process_image(data):
     _, temp_local_filename = tempfile.mkstemp()
     blob.download_to_filename(temp_local_filename)
 
-    # temp_local_filename is the file path to the temporary file.
-    # Process the image from the temporary file.
+    detected = full_process.full_pipeline(temp_local_filename)
 
-    # with open(temp_local_filename, "rb") as image_file:
-    #     image = image_file.read()
+    if detected:
+        vehicle_type, plate_number = detected[0]
+        print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
 
-    # Save the image to a new file
+    vehicle_type, plate_number = full_process.full_pipeline(temp_local_filename)[0]
 
-    # with open(temp_local_filename, "wb") as image_file:
-    #     image_file.write(image)
-
-    # Upload the processed image to the Cloud Storage bucket.
-    __upload_image(file_name, temp_local_filename)
-
-
-def __upload_image(blob_name, file_name):
-    """Uploads the image to the Cloud Storage bucket.
-
-    Args:
-        blob_name: name of the blob in the bucket
-        file_name: name of the file in local storage (tempfile)
-    """
-
-    upload_bucket_name = os.getenv("UPLOAD_BUCKET_NAME")
-    upload_bucket = storage_client.bucket(upload_bucket_name)
-
-    # Upload the image to the Cloud Storage bucket.
-    upload_blob = upload_bucket.blob(blob_name)
-    upload_blob.upload_from_filename(file_name)
-    print(f"Image {blob_name} was uploaded to {upload_bucket_name}.")
-
-    # Delete the temporary file.
-    os.remove(file_name)
+    print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
