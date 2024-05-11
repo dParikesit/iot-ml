@@ -159,7 +159,7 @@ def get_car(license_plate, vehicle_track_ids):
 
     foundIt = False
     for j in range(len(vehicle_track_ids)):
-        xcar1, ycar1, xcar2, ycar2, car_id = vehicle_track_ids[j]
+        xcar1, ycar1, xcar2, ycar2, score, class_id = vehicle_track_ids[j]
 
         if x1 > xcar1 and y1 > ycar1 and x2 < xcar2 and y2 < ycar2:
             car_indx = j
@@ -170,3 +170,6 @@ def get_car(license_plate, vehicle_track_ids):
         return vehicle_track_ids[car_indx]
 
     return -1, -1, -1, -1, -1
+
+def conv_class(class_id: float, mapping: dict):
+    return mapping[int(class_id)]

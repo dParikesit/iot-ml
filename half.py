@@ -11,11 +11,9 @@ yolo_model = YOLO("model/yolov8l.pt")
 license_plate_detector = YOLO("model/license_plate_detector.pt")
 
 vehicles = [2, 3, 5, 7]
-log_file = open("output/result.log", "w+")
-
 
 def full_pipeline(image_url: str, log=False, debug=True):
-    output = ""
+    output = []
     count = 0
     
     frame = cv2.imread(image_url)
@@ -35,9 +33,10 @@ def full_pipeline(image_url: str, log=False, debug=True):
 
         count+=1
 
-
         if license_plate_text is not None:
             if log:
+                log_file = open("output/result.log", "a")
+
                 log_file.write(
                     json.dumps(
                         {
@@ -51,12 +50,11 @@ def full_pipeline(image_url: str, log=False, debug=True):
                                 "%d/%m/%Y, %H:%M:%S"
                             ),
                         }
-                    )
+                    ) + "\n"
                 )
-            output += format_license(license_plate_text)
 
+                log_file.close()
+            output.append(format_license(license_plate_text))
     return output
 
-print(full_pipeline("input/4.jpg"))
-
-log_file.close()
+# print(full_pipeline("input/4.jpg"))
