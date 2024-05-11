@@ -4,6 +4,8 @@ import os
 
 from flask import Flask, request
 
+import image
+
 
 app = Flask(__name__)
 
@@ -47,7 +49,7 @@ def index():
             return f"Bad Request: {msg}", 400
 
         try:
-            image.blur_offensive_images(data)
+            image.process_image(data)
             return ("", 204)
 
         except Exception as e:
@@ -57,6 +59,9 @@ def index():
     return ("", 500)
 
 
-@app.route("/hello", methods=["GET"])
-def hello():
-    return "Hello World!"
+if __name__ == "__main__":
+    PORT = int(os.getenv("PORT")) if os.getenv("PORT") else 8080
+
+    # This is used when running locally. Gunicorn is used to run the
+    # application on Cloud Run. See entrypoint in Dockerfile.
+    app.run(host="127.0.0.1", port=PORT, debug=True)
