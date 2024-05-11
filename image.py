@@ -39,7 +39,7 @@ def process_image(data):
 
     # Send the image to the backend.
     requests.post(
-        BACKEND_URL,
+        BACKEND_URL + "/vehicle/action/",
         json={
             "plate_number": plate_number,
             "image_url": f"https://storage.googleapis.com/{bucket_name}/{file_name}",
