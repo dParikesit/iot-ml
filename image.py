@@ -35,15 +35,15 @@ def process_image(data):
         vehicle_type, plate_number = detected[0]
         print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
 
-    vehicle_type, plate_number = full_process.full_pipeline(temp_local_filename)[0]
+        # vehicle_type, plate_number = full_process.full_pipeline(temp_local_filename)[0]
 
-    # Send the image to the backend.
-    requests.post(
-        BACKEND_URL + "/vehicle/action/",
-        json={
-            "plate_number": plate_number,
-            "image_url": f"https://storage.googleapis.com/{bucket_name}/{file_name}",
-        },
-    )
-
-    print(f"Vehicle type: {vehicle_type}, Plate number: {plate_number}")
+        # Send the image to the backend.
+        requests.post(
+            BACKEND_URL + "/vehicle/action/",
+            json={
+                "plate_number": plate_number,
+                "image_url": f"https://storage.googleapis.com/{bucket_name}/{file_name}",
+            },
+        )
+    else:
+        print("No vehicle detected, detected: {}".format(detected))
